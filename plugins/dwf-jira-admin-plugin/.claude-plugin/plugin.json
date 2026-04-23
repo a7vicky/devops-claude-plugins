@@ -1,6 +1,6 @@
 {
   "name": "dwf-jira-admin-plugin",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Jira administration plugin for the DW project on Jira Cloud. Uses curl with the Jira REST API for creating, updating, and querying issues. No MCP or CLI tools required.",
   "owner": {
     "name": "DW Team",

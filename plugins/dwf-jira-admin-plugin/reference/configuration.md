@@ -5,125 +5,60 @@
 | Property | Value |
 |----------|-------|
 | Space | Digital Workforce |
-| Default Board | Digital Workforce Scrum Teams |
+| Board | Digital Workforce Scrum Teams |
 | Project Key | DW |
-| Project Name | DevOps Workflows |
-| Jira Instance | Jira Cloud (redhat.atlassian.net) |
-| Installation Type | Cloud |
-
-## Default Configuration
-
-```json
-{
-  "installationType": "Cloud",
-  "jiraBaseUrl": "https://redhat.atlassian.net",
-  "defaultProject": "DW"
-}
-```
-
-## Supported Issue Types
-
-| Type | Description | Usage |
-|------|-------------|-------|
-| Epic | Large initiatives spanning multiple stories | Strategic planning |
-| Feature | Significant capability or functionality | Feature development |
-| Story | User-facing work item | Feature decomposition |
-| Task | Work without user-facing value | Internal work |
-| Bug | Defect in existing functionality | Issue tracking |
-| Sub-task | Breakdown of larger item | Task decomposition |
+| Jira Instance | https://redhat.atlassian.net |
+| Installation | Cloud |
+| API | REST API v3 (`/rest/api/3/`) |
 
 ## Required Environment Variables
 
 ```bash
-# Jira credentials
 export JIRA_USER="your-email@redhat.com"
-export JIRA_API_TOKEN="your-api-token"
-
-# Optional configuration
-export JIRA_BASE_URL="https://redhat.atlassian.net"
-export JIRA_PROJECT="DW"
-export JIRA_ISSUE_TYPE="Task"
-```
-
-## Issue Template Structure
-
-The default `jira_issue_template.md` includes sections for:
-
-- **Summary**: Brief issue title
-- **Environment**: Context and affected systems
-- **Description**: Detailed problem or feature description
-- **Steps to reproduce**: How to replicate the issue (for bugs)
-- **Expected behavior**: What should happen
-- **Notes**: Additional context, links, or attachments
-
-## CLI Tools
-
-### acli (Atlassian CLI)
-
-- Enterprise-grade Jira CLI tool
-- Comprehensive field support
-- Better for automation and scripting
-- Command format: `acli --action <action> --<flag> <value>`
-
-### jira-cli
-
-- Lightweight modern Jira CLI
-- Better interactive experience
-- Good for manual operations
-- Command format: `jira <command> <args>`
-
-The plugin automatically uses whichever tool is available, with preference for acli.
-
-## Authentication Methods
-
-### API Token (Recommended)
-
-```bash
 export JIRA_API_TOKEN="your-api-token"
 ```
 
 Get token: https://id.atlassian.com/manage-profile/security/api-tokens
 
-### Personal Access Token (PAT)
+## Supported Issue Types
 
-Available in Jira Cloud for authorized users.
+| Type | Description |
+|------|-------------|
+| Epic | Large initiatives spanning multiple stories |
+| Feature | Significant capability or functionality |
+| Story | User-facing work item |
+| Task | General work item (default) |
+| Bug | Defect in existing functionality |
+| Sub-task | Breakdown of a parent issue |
 
-## Output Formats
+## API Endpoints
 
-### Raw JSON (Recommended for Scripting)
-
-```bash
-# acli
-acli --action getIssue --issue DW-123
-
-# jira-cli
-jira issue view DW-123 --raw
-```
-
-### CSV Export
-
-```bash
-# Use with jira-cli
-jira issue list --jql "project = DW" --csv
-```
+| Operation | Method | Endpoint |
+|-----------|--------|----------|
+| Get issue | GET | `/rest/api/3/issue/{key}` |
+| Search (JQL) | POST | `/rest/api/3/search` |
+| Create issue | POST | `/rest/api/3/issue` |
+| Update issue | PUT | `/rest/api/3/issue/{key}` |
+| Get transitions | GET | `/rest/api/3/issue/{key}/transitions` |
+| Transition issue | POST | `/rest/api/3/issue/{key}/transitions` |
+| Add comment | POST | `/rest/api/3/issue/{key}/comment` |
+| Search users | GET | `/rest/api/3/user/search?query={email}` |
 
 ## Useful Links
 
 - **Jira Instance**: https://redhat.atlassian.net/
-- **DW Project**: https://redhat.atlassian.net/browse/DW
+- **DW Project Board**: https://redhat.atlassian.net/browse/DW
 - **API Tokens**: https://id.atlassian.com/manage-profile/security/api-tokens
-- **JQL Help**: https://support.atlassian.com/jira-cloud-platform/docs/advanced-searching-using-jql/
+- **REST API v3 Docs**: https://developer.atlassian.com/cloud/jira/platform/rest/v3/
+- **JQL Reference**: https://support.atlassian.com/jira-cloud-platform/docs/advanced-searching-using-jql/
 
-## Common Issues and Solutions
+## Troubleshooting
 
-### Issue: "Unauthorized" error
-**Solution**: Verify JIRA_USER and JIRA_API_TOKEN environment variables
-
-### Issue: "Project DW not found"
-**Solution**: Confirm you have access to the DW project or override with --project flag
-
-### Issue: "Invalid issue type"
-**Solution**: Use one of the supported types: Bug, Task, Story, Epic, Feature, Sub-task
-
-### Issue: "Description template not found"
-**Solution**: Either provide --description directly or ensure jira_issue_template.md exists
+| Issue | Fix |
+|-------|-----|
+| 401 Unauthorized | Check `JIRA_USER` and `JIRA_API_TOKEN` |
+| 403 Forbidden | Your account lacks permissions for this operation |
+| 404 Not Found | Wrong issue key or project key |
+| 400 Bad Request | Check JSON payload format (especially ADF for descriptions) |
+| `JIRA_USER` not set | `export JIRA_USER="you@redhat.com"` |
+| `JIRA_API_TOKEN` not set | Get one from https://id.atlassian.com/manage-profile/security/api-tokens |

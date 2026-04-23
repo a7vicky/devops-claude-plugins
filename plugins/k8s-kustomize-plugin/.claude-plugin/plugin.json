@@ -1,0 +1,12 @@
+{
+  "name": "k8s-kustomize-plugin",
+  "version": "1.0.0",
+  "description": "Kubernetes Kustomize plugin for building, validating, scaffolding, and managing Kustomize overlays. Uses kubectl kustomize and kustomize CLI directly — no MCP required.",
+  "owner": {
+    "name": "DW Team",
+    "email": "aabhishe@redhat.com"
+  },
+  "defaultConfig": {
+    "preferredCLI": "kubectl kustomize"
+  }
+}
