@@ -1,0 +1,20 @@
+{
+  "name": "devops-claude-plugins",
+  "owner": {
+    "name": "Abhishek",
+    "email": "aabhishe@redhat.com"
+  },
+  "plugins": [
+    {
+      "name": "dwf-jira-admin-plugin",
+      "source": "./plugins/dwf-jira-admin-plugin",
+      "description": "Adds a /dwf-jira-admin skill for managing Jira tasks and projects. This plugin allows users to create, update, and query Jira issues directly from the chat interface.",
+      "capabilities": [
+        "Create Jira issues",
+        "Update Jira issues",
+        "Query Jira issues",
+        "Manage Jira projects"
+      ]
+    }
+  ]
+}
