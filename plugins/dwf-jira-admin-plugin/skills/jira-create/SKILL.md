@@ -1,43 +1,36 @@
 ---
-name: DWF Jira Create Issue
-description: Create new Jira issues in the DW project on Jira Cloud using curl and the REST API. Supports all issue types with summary, description, priority, and assignee.
-allowed-tools: Shell, Read, Grep, Glob
+name: dwf-jira-create
+description: Create new Jira issues in the DW project on Jira Cloud. Use when user says "create a ticket", "file a bug", "make a story", "add a task", "create Jira issue", "log a bug", or wants to create any work item in the DW project.
+metadata:
+  author: DW Team
+  version: 2.0.0
 ---
 
 # DWF Jira Create Issue
 
-Create Jira issues in the DW project using `curl` against the Jira REST API.
+Create Jira issues in the DW project via `curl` and the Jira REST API v3.
 
-## Guardrails
+## Important
 
-- **DO NOT** ask the user for cloudId, base URL, or auth details — use the defaults below.
-- **DO NOT** ask for issue type unless it's ambiguous — default to `Task`.
-- **DO NOT** ask for priority unless the user mentions it — default to `Medium`.
-- **DO NOT** ask for description if the user gave a clear summary — create the issue with just the summary. Add a reasonable description yourself if the context is obvious.
-- **DO NOT** ask about labels, components, or custom fields unless the user mentions them.
-- **DO NOT** ask for confirmation before creating — just create it and show the result.
-- If the user says "bug", use type `Bug`. If "story", use `Story`. If "epic", use `Epic`. Otherwise default to `Task`.
+- Do not ask for cloudId, base URL, or auth details — use defaults below.
+- Do not ask for issue type unless ambiguous — default to `Task`.
+- Do not ask for priority unless user mentions it — default to `Medium`.
+- Do not ask for description if the user gave a clear summary — create with just the summary, adding a reasonable description from context.
+- Do not ask about labels, components, or custom fields unless the user mentions them.
+- Do not ask for confirmation — create immediately and report the result.
+- Infer type from keywords: "bug" -> Bug, "story" -> Story, "epic" -> Epic, otherwise Task.
 
-## Prerequisites
+## Step 1: Verify Auth
 
-Required environment variables (check before first use):
+Run silently before the first Jira call in a session:
 
 ```bash
-test -n "$JIRA_USER" && test -n "$JIRA_API_TOKEN" && echo "OK" || echo "MISSING: set JIRA_USER (email) and JIRA_API_TOKEN (API token from https://id.atlassian.com/manage-profile/security/api-tokens)"
+test -n "$JIRA_USER" && test -n "$JIRA_API_TOKEN" && echo "OK" || echo "MISSING: set JIRA_USER (email) and JIRA_API_TOKEN (https://id.atlassian.com/manage-profile/security/api-tokens)"
 ```
 
-If variables are missing, tell the user exactly what to set and stop.
+If missing, tell the user what to set and stop.
 
-## Defaults
-
-| Setting | Value |
-|---------|-------|
-| Base URL | `https://redhat.atlassian.net` |
-| Project | `DW` |
-| Issue Type | `Task` |
-| Priority | `Medium` |
-
-## Create an Issue
+## Step 2: Create the Issue
 
 ```bash
 curl -s -u "$JIRA_USER:$JIRA_API_TOKEN" \
@@ -46,78 +39,54 @@ curl -s -u "$JIRA_USER:$JIRA_API_TOKEN" \
   -d '{
     "fields": {
       "project": {"key": "DW"},
-      "summary": "Issue summary here",
+      "summary": "REPLACE_SUMMARY",
       "issuetype": {"name": "Task"},
       "description": {
         "type": "doc",
         "version": 1,
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {"type": "text", "text": "Description text here"}
-            ]
-          }
-        ]
+        "content": [{"type": "paragraph", "content": [{"type": "text", "text": "REPLACE_DESCRIPTION"}]}]
       }
     }
   }' \
   "https://redhat.atlassian.net/rest/api/3/issue" | python3 -m json.tool
 ```
 
-## With Priority and Assignee
+To add priority or assignee, include in the `fields` object:
 
-```bash
-curl -s -u "$JIRA_USER:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -X POST \
-  -d '{
-    "fields": {
-      "project": {"key": "DW"},
-      "summary": "High priority task",
-      "issuetype": {"name": "Bug"},
-      "priority": {"name": "High"},
-      "assignee": {"id": "ACCOUNT_ID"},
-      "description": {
-        "type": "doc",
-        "version": 1,
-        "content": [
-          {
-            "type": "paragraph",
-            "content": [
-              {"type": "text", "text": "Description here"}
-            ]
-          }
-        ]
-      }
-    }
-  }' \
-  "https://redhat.atlassian.net/rest/api/3/issue" | python3 -m json.tool
+```json
+"priority": {"name": "High"},
+"assignee": {"id": "ACCOUNT_ID"}
 ```
 
-To find a user's account ID for assignee, search:
+Look up account ID when assigning:
 
 ```bash
 curl -s -u "$JIRA_USER:$JIRA_API_TOKEN" \
   "https://redhat.atlassian.net/rest/api/3/user/search?query=user@redhat.com" | python3 -m json.tool
 ```
 
-## After Creation
+## Step 3: Report Result
 
 On success the API returns `{"id": "...", "key": "DW-NNN", "self": "..."}`.
 
-Report back: **Created [DW-NNN](https://redhat.atlassian.net/browse/DW-NNN)** with the summary.
+Report: **Created [DW-NNN](https://redhat.atlassian.net/browse/DW-NNN)** — summary text.
 
-## Issue Types
+## Examples
 
-| Type | When to Use |
-|------|------------|
-| Task | General work items (default) |
-| Bug | Defects and issues |
-| Story | User-facing features |
-| Epic | Large initiatives spanning multiple stories |
-| Sub-task | Breakdown of a parent issue |
+**User says:** "Create a bug for the broken login page"
 
-## Description Format
+Action: Create with `issuetype: Bug`, summary: "Broken login page", description inferred from context.
 
-Jira Cloud REST API v3 uses Atlassian Document Format (ADF) for descriptions. For plain text, wrap in the paragraph structure shown above. For multi-paragraph descriptions, add multiple paragraph objects to the `content` array.
+**User says:** "Add a task to update the deployment docs"
+
+Action: Create with `issuetype: Task`, summary: "Update the deployment docs".
+
+## Troubleshooting
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| 400 Bad Request | Missing required field or bad ADF | Ensure summary is non-empty, description uses ADF format |
+| 401 Unauthorized | Bad credentials | Verify `JIRA_USER` and `JIRA_API_TOKEN` |
+| `issuetype` not found | Invalid type for project | Use: Task, Bug, Story, Epic, Sub-task |
+
+For Atlassian Document Format (ADF) reference, consult `references/adf-format.md`.
