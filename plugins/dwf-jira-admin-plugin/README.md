@@ -56,7 +56,7 @@ Update existing issues — fields, status, assignee, comments.
 **Example prompts:**
 - "Update DW-123 summary to ..."
 - "Move DW-456 to In Progress"
-- "Assign DW-789 to john@redhat.com"
+- "Assign DW-789 to abc@redhat.com"
 - "Add a comment to DW-100"
 
 ## Install
